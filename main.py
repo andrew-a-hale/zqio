@@ -1,4 +1,4 @@
-from app import puzzle
+from puzzle import puzzle
 import logging
 
 logging.basicConfig(level=logging.INFO,
@@ -7,7 +7,9 @@ logging.basicConfig(level=logging.INFO,
 
 
 def main():
-    p = puzzle.Puzzle(10, 1)
+    p = puzzle.Puzzle(10, 4)
+    p.solve_grid_recursive()
+    p.__repr__()
     p.solve_grid_brute_force()
     p.__repr__()
 
