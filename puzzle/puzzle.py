@@ -30,7 +30,7 @@ class Puzzle():
         self.score = None
 
     def solve_grid_brute_force(self):
-        """solve by calculating all paths and selecting the maximum"""
+        """Solve by calculating all paths and selecting the maximum"""
         self.solver_type = "BRUTE FORCE"
 
         if self.path_size > 22:
@@ -56,7 +56,7 @@ class Puzzle():
         self.path = self.format_path(paths[best_path])
 
     def solve_grid_recursive(self):
-        """solve by recursively calculating the best path"""
+        """Solve by recursively calculating the best path"""
         self.solver_type = "RECURSIVE"
 
         # set up memoisation and grid
@@ -71,6 +71,7 @@ class Puzzle():
             if i == 0 and j == 0:
                 memo[i][j] = (grid_2d[i][j], [(i, j)])
                 return memo[i][j]
+            
             max_sum = -1
             max_path = []
             if i > 0:
@@ -83,17 +84,18 @@ class Puzzle():
                 if sum_up > max_sum:
                     max_sum = sum_up
                     max_path = path_up
-            max_path = max_path.copy()
-
+            
             # coordinates are reversed because the grid is flipped in the recursive solution
+            max_path = max_path.copy()
             max_path.append((j, i))
+            
             memo[i][j] = (max_sum + grid_2d[i][j], max_path)
             return memo[i][j]
 
         self.score, self.path = helper(self.grid_size - 1, self.grid_size - 1)
 
     def solve_grid_dijkstra(self):
-        """solve by using dijkstra's algorithm"""
+        """Solve by using dijkstra's algorithm"""
         self.solver_type = "DIJKSTRAS"
 
         # create a graph of the grid
@@ -118,11 +120,14 @@ class Puzzle():
         while unvisited:
             current = min(unvisited, key=path_cost.__getitem__)
             unvisited.remove(current)
+            
             if current == target:
                 break
-            for edge in [
-                    x for x in edges if current == x[0] and x[1] in unvisited
-            ]:
+            
+            adj_edges = [
+                x for x in edges if current == x[0] and x[1] in unvisited
+            ]
+            for edge in adj_edges:
                 new_cost = path_cost[current] + dist[edge[1]]
                 if new_cost < path_cost[edge[1]]:
                     path_cost[edge[1]] = new_cost
@@ -133,7 +138,7 @@ class Puzzle():
         for edge in reversed(path):
             if len(shortest_path) == 0 and edge[1] == target:
                 shortest_path.append(edge)
-            if len(shortest_path) > 0 and edge[1] == shortest_path[-1][0]:
+            elif len(shortest_path) > 0 and edge[1] == shortest_path[-1][0]:
                 shortest_path.append(edge)
 
         self.path = [0] + [x[1] for x in reversed(shortest_path)]
