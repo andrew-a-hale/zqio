@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO,
 
 
 def main():
-    p = puzzle.Puzzle(grid='1,4,2,4,4,3,3,2,3,1,5,1,3,5,2,3,2,4,3,4,2,3,5,4,1')
+    p = puzzle.Puzzle.input(grid='1,4,2,4,4,3,3,2,3,1,5,1,3,5,2,3,2,4,3,4,2,3,5,4,1')
     p.print_grid()
     p.solve_grid_dijkstra()
     p.__repr__()
@@ -19,7 +19,7 @@ def main():
 
 
 def benchmark():
-    call = "puzzle.Puzzle(grid_size=5, seed=1)"
+    call = "puzzle.Puzzle.random(grid_size=5, seed=1)"
     setup = f"from puzzle import puzzle; p = {call}"
     return {
         x: timeit.timeit(f"p.{x}()", setup=setup, number=100)

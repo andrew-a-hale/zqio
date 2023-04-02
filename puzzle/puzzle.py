@@ -7,27 +7,30 @@ from typing import List, Tuple
 
 class Puzzle():
 
-    def __init__(self,
-                 grid: str = None,
-                 grid_size: int = None,
-                 seed: int = None):
-        if grid:
-            self.grid = self._parse_grid(grid)
-            parsed_grid_size = math.sqrt(len(self.grid))
-            if math.isqrt(len(self.grid)) != parsed_grid_size:
-                raise ValueError("Grid must be square")
-            if grid_size and parsed_grid_size != grid_size:
-                raise ValueError("Grid size does not match given grid")
-        else:
-            self.grid = self._generate_grid(grid_size, seed)
-
-        self.grid_size = grid_size if grid_size else int(parsed_grid_size)
+    def __init__(self, grid: List[int]):
+        self.grid = grid
+        self.grid_size = math.isqrt(len(self.grid))
         self.path_height = self.grid_size - 1
         self.path_size = self.path_height * 2
 
         self.solver_type = None
         self.path = None
         self.score = None
+
+    @classmethod
+    def random(cls, grid_size: int, seed: int):
+        """Generate a random puzzle of a given size"""
+        return cls(grid=cls._generate_grid(grid_size, seed))
+
+    @classmethod
+    def input(cls, grid: str):
+        """Generate a puzzle from a given grid"""
+        grid = cls._parse_grid(grid)
+        parsed_grid_size = math.sqrt(len(grid))
+        if int(parsed_grid_size) != parsed_grid_size:
+            raise ValueError("Grid must be square")
+
+        return cls(grid=grid)
 
     def solve_grid_brute_force(self):
         """Solve by calculating all paths and selecting the maximum"""
@@ -71,7 +74,7 @@ class Puzzle():
             if i == 0 and j == 0:
                 memo[i][j] = (grid_2d[i][j], [(i, j)])
                 return memo[i][j]
-            
+
             max_sum = -1
             max_path = []
             if i > 0:
@@ -84,11 +87,11 @@ class Puzzle():
                 if sum_up > max_sum:
                     max_sum = sum_up
                     max_path = path_up
-            
+
             # coordinates are reversed because the grid is flipped in the recursive solution
             max_path = max_path.copy()
             max_path.append((j, i))
-            
+
             memo[i][j] = (max_sum + grid_2d[i][j], max_path)
             return memo[i][j]
 
@@ -120,10 +123,10 @@ class Puzzle():
         while unvisited:
             current = min(unvisited, key=path_cost.__getitem__)
             unvisited.remove(current)
-            
+
             if current == target:
                 break
-            
+
             adj_edges = [
                 x for x in edges if current == x[0] and x[1] in unvisited
             ]
@@ -151,18 +154,20 @@ class Puzzle():
             for x in range(self.grid_size)
         ]
 
-    def _generate_grid(self, grid_size, seed) -> List[List[int]]:
+    @staticmethod
+    def _generate_grid(grid_size, seed) -> List[List[int]]:
         random.seed(seed)
         return [
             math.ceil(random.random() * grid_size) for _ in range(grid_size**2)
         ]
 
-    def _parse_grid(self, grid: str) -> List[List[int]]:
+    @staticmethod
+    def _parse_grid(grid: str) -> List[List[int]]:
         return [int(x) for x in grid.split(",")]
 
     def print_grid(self):
         logging.info(
-            f"Searching {math.comb(self.path_size, self.path_height)} paths")
+            f"{math.comb(self.path_size, self.path_height)} possible paths")
         grid_2d = self._flat_to_2d()
         width = math.floor(math.log10(self.grid_size)) + 1
         for row in reversed(grid_2d):
@@ -175,9 +180,9 @@ class Puzzle():
         return [(x % self.grid_size, x // self.grid_size) for x in path]
 
     def __repr__(self):
-        print(self.solver_type)
+        print(f"Solver: {self.solver_type}")
         if self.score:
-            print(self.score)
+            print(f"Score: {self.score}")
         if self.path:
-            print(self.path)
+            print(f"Path: {self.path}")
         print()
