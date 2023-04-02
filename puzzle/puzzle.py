@@ -97,6 +97,8 @@ class Puzzle():
                  [(x, x + self.grid_size)
                   for x in nodes if x < self.grid_size**2 - self.grid_size])
         max_dist = max(self.grid)
+        
+        # invert the grid so that the path is the shortest distance
         dist = [max_dist - x for x in self.grid]
 
         # dijkstra's algorithm initialisation
