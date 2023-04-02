@@ -7,25 +7,31 @@ from typing import List, Tuple
 
 class Puzzle():
 
-    def __init__(self, grid_size: int, seed: int):
-        self.grid_size = grid_size
-        self.path_height = grid_size - 1
+    def __init__(self,
+                 grid: str = None,
+                 grid_size: int = None,
+                 seed: int = None):
+        if grid:
+            self.grid = self._parse_grid(grid)
+            parsed_grid_size = math.sqrt(len(self.grid))
+            if math.isqrt(len(self.grid)) != parsed_grid_size:
+                raise ValueError("Grid must be square")
+            if grid_size and parsed_grid_size != grid_size:
+                raise ValueError("Grid size does not match given grid")
+        else:
+            self.grid = self._generate_grid(grid_size, seed)
+
+        self.grid_size = grid_size if grid_size else int(parsed_grid_size)
+        self.path_height = self.grid_size - 1
         self.path_size = self.path_height * 2
-        self.seed = seed
+
+        self.solver_type = None
         self.path = None
         self.score = None
-
-        random.seed(seed)
-        self.grid = [
-            math.ceil(random.random() * grid_size) for _ in range(grid_size**2)
-        ]
 
     def solve_grid_brute_force(self):
         """solve by calculating all paths and selecting the maximum"""
         self.solver_type = "BRUTE FORCE"
-                
-        logging.info(
-            f"Searching {math.comb(self.path_size, self.path_height)} paths")
 
         if self.path_size > 22:
             logging.warning(
@@ -78,7 +84,7 @@ class Puzzle():
                     max_sum = sum_up
                     max_path = path_up
             max_path = max_path.copy()
-            
+
             # coordinates are reversed because the grid is flipped in the recursive solution
             max_path.append((j, i))
             memo[i][j] = (max_sum + grid_2d[i][j], max_path)
@@ -89,7 +95,7 @@ class Puzzle():
     def solve_grid_dijkstra(self):
         """solve by using dijkstra's algorithm"""
         self.solver_type = "DIJKSTRAS"
-        
+
         # create a graph of the grid
         nodes = [x for x in range(self.grid_size**2)]
         edges = ([(x, x + 1)
@@ -97,7 +103,7 @@ class Puzzle():
                  [(x, x + self.grid_size)
                   for x in nodes if x < self.grid_size**2 - self.grid_size])
         max_dist = max(self.grid)
-        
+
         # invert the grid so that the path is the shortest distance
         dist = [max_dist - x for x in self.grid]
 
@@ -114,14 +120,13 @@ class Puzzle():
             unvisited.remove(current)
             if current == target:
                 break
-            for edge in edges:
-                if current == edge[0]:
-                    neighbour = edge[1]
-                    if neighbour in unvisited:
-                        new_cost = path_cost[current] + dist[neighbour]
-                        if new_cost < path_cost[neighbour]:
-                            path_cost[neighbour] = new_cost
-                            path.append((current, neighbour))
+            for edge in [
+                    x for x in edges if current == x[0] and x[1] in unvisited
+            ]:
+                new_cost = path_cost[current] + dist[edge[1]]
+                if new_cost < path_cost[edge[1]]:
+                    path_cost[edge[1]] = new_cost
+                    path.append((current, edge[1]))
 
         # extract the shortest path from the path list
         shortest_path = []
@@ -141,14 +146,25 @@ class Puzzle():
             for x in range(self.grid_size)
         ]
 
+    def _generate_grid(self, grid_size, seed) -> List[List[int]]:
+        random.seed(seed)
+        return [
+            math.ceil(random.random() * grid_size) for _ in range(grid_size**2)
+        ]
+
+    def _parse_grid(self, grid: str) -> List[List[int]]:
+        return [int(x) for x in grid.split(",")]
+
     def print_grid(self):
+        logging.info(
+            f"Searching {math.comb(self.path_size, self.path_height)} paths")
         grid_2d = self._flat_to_2d()
-        width = math.ceil(math.log10(self.grid_size))
+        width = math.floor(math.log10(self.grid_size)) + 1
         for row in reversed(grid_2d):
             for col in row:
                 print(f"{col:>{width}}", end=" ")
-            print("")
-        print("")
+            print()
+        print()
 
     def format_path(self, path) -> List[Tuple[int, int]]:
         return [(x % self.grid_size, x // self.grid_size) for x in path]

@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO,
 
 
 def main():
-    p = puzzle.Puzzle(50, 1)
+    p = puzzle.Puzzle(grid='1,4,2,4,4,3,3,2,3,1,5,1,3,5,2,3,2,4,3,4,2,3,5,4,1')
     p.print_grid()
     p.solve_grid_dijkstra()
     p.__repr__()
@@ -17,13 +17,19 @@ def main():
     p.solve_grid_brute_force()
     p.__repr__()
 
+
 def benchmark():
-    call = "puzzle.Puzzle(50, 1)"
+    call = "puzzle.Puzzle(grid_size=5, seed=1)"
+    setup = f"from puzzle import puzzle; p = {call}"
     return {
-        "dijkstra": timeit.timeit("p.solve_grid_dijkstra()", setup=f"from puzzle import puzzle; p = {call}", number=1),
-        "recursive": timeit.timeit("p.solve_grid_recursive()", setup=f"from puzzle import puzzle; p = {call}", number=1),
-        "brute_force": timeit.timeit("p.solve_grid_brute_force()", setup=f"from puzzle import puzzle; p = {call}", number=1)
+        x: timeit.timeit(f"p.{x}()", setup=setup, number=100)
+        for x in [
+            "solve_grid_dijkstra",
+            "solve_grid_recursive",
+            "solve_grid_brute_force"
+        ]
     }
+
 
 if __name__ == "__main__":
     main()
